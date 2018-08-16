@@ -1,0 +1,137 @@
+## 前言 ##
+&emsp;&emsp;jQuery是一款优秀的前端框架，平时的开发中我们几乎都离不开它。无论前端还是后端，作为一名web开发者，掌握jQuery几乎是必不可少的技能。不过，近几年随着MVVM框架的风靡，唱衰jQuery的声音愈演愈烈，甚至近段时间都出现了“永别了，jQuery”这些哗众取宠的博文，惹得还在“jQuery一把梭”的群众人心惶惶，仿佛真的到了jQuery的审判日了。对于jQuery的命运我们不做猜测，只是如果现在就说jQuery已被抛弃，显然是幼稚可笑的。作为旧时代的王者，jQuery蕴含着无比精妙的设计和独一无二的架构思想，这对我们学习JavaScript来说，是一个无比丰富的宝藏，即使我们以后不再使用jQuery，我们还是能在新时代的框架下面看到它的影子，这才是jQuery的价值所在。接下来的系列文章中，我会通过jQuery源码的解读，逐一探究其奥秘，让我们一起领略jQuery之美吧。
+
+## 灵魂之问 ##
+让我们先来看几个常用的场景
+```js
+$(document).ready(...) //等待DOM渲染完成
+$("#id").find(...) //查找id下的某元素
+$("<li></li>").appendTo(...) //创建元素添加到某元素
+// ...
+```
+这些场景我们都是见怪不怪了，不过有没有人思考过，`$(...)`这个东西是如何产生的呢？很显然它是一个对象，但是它为何可以调用各种我们常见的方法？这里想必有很多聪明的小伙伴已经发怒了，原型啊！这不是侮辱我高达150的智商么！！！额。。。好吧！算你聪明，接下来让我们看一段代码：
+```js
+function jQuery(){
+	this.name = "jquery";
+    //...
+}
+jQuery.prototype = {
+	construtor: jQuery,
+    find: function(){...}
+}
+var $ = new jQuery();
+$.find(...) //终于可以开始愉快的调用$.find方法了
+```
+写到这里，各位小伙伴大佬微微点头：不错不错，我就是这个意思！！这个时候John Resig(jQuery的作者)跳了出来：我可没这样写，不要侮辱我的智商！！！小伙伴大佬：咦，你不就是这样写的吗，有啥了不起的，切！
+
+## 灵魂拷问 ##
+上面John Resig跟小伙伴大佬的争论我就不管了，先看其中有什么猫腻吧：
+```js
+$("#id").find(...) //John Resig
+$.find() //小伙伴大佬
+```
+咦，好像还真有点不一样！！John Resig是通过`$("#id")`函数调用后才调用`find`，小伙伴大佬是直接通过`$`对象调用了`find`；
+
+说到这里，小伙伴大佬不服气了，这有啥了不起啊？！！
+
+嗯嗯。。。这貌似是个问题，这有啥了不起呢？？
+
+文明人还是多上代码少上手吧：
+```js
+//John Resig：看我的 $ 能变几样！
+$(document) === $(document) //false
+//小伙伴大佬：难道我的 $ 就虚你？
+$ === $ //true  哟，沃德天，咋就一模一样了？...
+```
+显而易见，John Resig的`$()`方法调用时,内部一定是生成并返回了一个新对象，其实也就是每调用一次，`new jQuery()`都会执行一次并放回，这其实也就是源码内部所做的事情，从而省掉了每次都要手动`new`一个jQuery实例对象的操作。这个非常精妙的设计是怎么实现的呢？小伙伴大佬陷入了沉思。。。
+
+## 闭关修炼 ##
+#### 第一次尝试
+不就是返回一个`new jQuery`吗？
+```js
+function jQuery(){
+	return new jQuery(); //so easy!!
+}
+jQuery.prototype = {
+	construtor: jQuery,
+    find: function(){...}
+}
+var $ = jQuery;
+//造成了循环调用，内存溢出，失败
+$().find();//Uncaught RangeError: Maximum call stack size exceeded...
+```
+
+#### 第二次尝试
+显然直接返回`new jQuery()`对象是行不通的了，那就返回一个新函数吧，只要新函数的原型继承了原有的`jQuery`对象，不也就可以了吗？
+```js
+function Fn(){} //即将继承jQuery的函数
+function jQuery(){
+	return new Fn(); //so easy!!
+}
+//继承jQuery函数
+Fn.prototype = jQuery.prototype = {
+	construtor: jQuery,
+    find: function(){console.log("成功")}
+}
+var $ = jQuery;
+$().find(); //成功！！
+```
+
+#### 源码实现
+```js
+// 定义jQuery构造函数
+jQuery = function( selector, context ) {
+	//返回一个新函数
+    return new jQuery.fn.init(/** selector, context, rootjQuery **/);
+};
+jQuery.fn = jQuery.prototype = {
+	constructor: jQuery,
+    init: function(/** selector, context, rootjQuery **/){},
+    find:function(){console.log("成功")},//伪造的测试方法
+    //...
+}
+// init其实就是继承jQuery的新函数(Fn)，所以需要手动添加继承
+jQuery.fn.init.prototype = jQuery.fn;
+//测试
+var $ = jQuery;
+$().find(); //成功！！
+```
+
+## 修仙秘笈 ##
+上文的源码实现其实就是第二次尝试的升级版本而已，原理是一模一样的，只不过显得有些绕，慢慢琢磨应该都可以领会。因为这是jQuery源码解读的第一篇，所以有必要把一些细节继续讲述一下：
+
+#### 框架结构
+jQuery的框架结构其实也非常简单，就是一个立即执行函数：
+```js
+//简化版本
+(function( window, undefined ) {
+	//...定义一些常用变量
+    //定义jQuery构造函数
+	var jQuery = function(){};
+    //添加各类原型方法
+    jQuery.extend({...});
+    //构造函数上面挂载各类工具方法
+    jQuery.xxx = function(){...}
+    //抛出构造函数，把jQuery注册为全局方法
+    window.jQuery = window.$ = jQuery;
+})( window );//传入window，缩短作用域链，函数内部可以更快访问到window
+```
+
+#### 细节
+   - window传入
+     之所以要在立即执行函数传入window变量，是因为js的作用链机制是层层由内而外查找的，传入window可以缩短查找window时的路径；
+   - undefined
+   	立即执行函数接收两个参数，第二个参数`undefined`永远是`undefined`，这样处理是为了避免`undefined`在外部被修改：
+    ```js
+    undefined = "hello";
+    console.log(undefined);//hello (某些版本浏览器下可以修改，如ie8)
+    ```
+
+
+
+
+
+
+
+
+
