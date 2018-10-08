@@ -1,56 +1,4 @@
-## GET与POST请求的区别
-
-GET和POST是什么？HTTP协议中的两种发送请求的方法。
-
-HTTP是什么？HTTP是基于TCP/IP的关于数据如何在万维网中如何通信的协议。
-
-HTTP的底层是TCP/IP。所以GET和POST的底层也是TCP/IP，也就是说，GET/POST都是TCP连接。GET和POST能做的事情是一样一样的。你要给GET加上request body，给POST带上url参数，技术上是完全行的通的。
-
-为什么GET与POST请求还有这么多差异呢？根源在于浏览器与服务器的限制。
-
-
-##### **缓存上的区别**
-
- - get请求类似于查找的过程，用户获取数据，可以不用每次都与数据库连接，所以可以使用缓存。
- - post不同，post做的一般是修改和删除的工作，所以必须与数据库交互，所以不能使用缓存。因此get请求适合于请求缓存。
-
-
-##### **安全上的区别**
-
- - 查询字符串（名称/值对）是在 GET 请求的 URL 中发送的，有安全问题。
- - 查询字符串（名称/值对）是在 POST 请求的 HTTP 消息主体中发送的，因此安全性较get高
-
-**误区：我们经常说get请求参数的大小存在限制，而post请求的参数大小是无限制的。**
-
-实际上HTTP 协议从未规定 GET/POST 的请求长度限制是多少。对get请求参数的限制是来源与浏览器或web服务器，浏览器或web服务器限制了url的长度。为了明确这个概念，我们必须再次强调下面几点:
-
- - HTTP 协议 未规定 GET 和POST的长度限制
- - GET的最大长度显示是因为 浏览器和 web服务器限制了 URI的长度
- - 不同的浏览器和WEB服务器，限制的最大长度不一样
- - 要支持IE，则最大长度为2083byte，若只支持Chrome，则最大长度 8182byte
-
-##### **总结**
-
-有关 GET 请求的其他一些注释：
-
- - GET 请求可被缓存
- - GET 请求保留在浏览器历史记录中
- - GET 请求可被收藏为书签
- - GET 请求不应在处理敏感数据时使用
- - GET 请求有长度限制
- - GET 请求只应当用于取回数据
-
-有关 POST 请求的其他一些注释：
-
- - POST 请求不会被缓存
- - POST 请求不会保留在浏览器历史记录中
- - POST 不能被收藏为书签
- - POST 请求对数据长度没有要求
-
-
-
 ## 对象的属性 ##
-
 ECMAScript 中有两种属性：数据属性和访问器属性。
 
 描述符可同时具有的键值
@@ -60,10 +8,7 @@ ECMAScript 中有两种属性：数据属性和访问器属性。
 |数据描述符 |	Yes |	Yes |	Yes |	Yes |	No |	No |
 |存取描述符 |	Yes |	Yes |	No | No |	Yes |	Yes |
 
-
-
 ##### 数据属性：
-
 ```js
 var obj = {};
 Object.defineProperty(obj, "key", {
@@ -72,7 +17,6 @@ Object.defineProperty(obj, "key", {
   writable: false,
   value: "static"
 });
-
 ```
 
 ##### 访问器属性：
@@ -94,16 +38,13 @@ console.log(obj._year); // hello
 console.log(obj.year); // hello
 ```
 
-
 ## 事件委托 ##
-
 ##### 为什么要事件委托：
 
  - 绑定事件越多，浏览器内存占用越大，严重影响性能。
  - ajax的出现，局部刷新的盛行，导致每次加载完，都要重新绑定事件
  - 部分浏览器移除元素时，绑定的事件并没有被及时移除，导致的内存泄漏，严重影响性能
  - 大部分ajax局部刷新的，只是显示的数据，而操作却是大部分相同的，重复绑定，会导致代码的耦合性过大，严重影响后期的维护。
-
 
 ##### 事件委托的简单实现：
 ```js
@@ -142,27 +83,22 @@ function _delegate(obj,tag,fn){
  - 减少绑定的次数
 
 
-
 ## 图片预加载与懒加载 ##
 
 ##### 预加载
+
 ######方法一：用CSS和JavaScript实现预加载
-
 使用纯CSS:
-
 ```css
 background: url(http://domain.tld/image-01.png) no-repeat -9999px -9999px; }  
 ```
-
 使用该法加载的图片会同页面的其他内容一起加载，增加了页面的整体加载时间。为了解决这个问题，我们增加了一些JavaScript代码，来推迟预加载的时间，直到页面加载完毕。
-
 ```js
 function preloader() {
     if (document.getElementById) {
         document.getElementById("preload-01").style.background = "url(http://domain.tld/image-01.png) no-repeat -9999px -9999px";
     }
 }
-
 function addLoadEvent(func) {
     var oldonload = window.onload;
     if (typeof window.onload != 'function') {
@@ -180,9 +116,7 @@ addLoadEvent(preloader);
 ```
 
 ###### 方法二：仅使用JavaScript实现预加载
-
 上述方法有时确实很高效，但我们逐渐发现它在实际实现过程中会耗费太多时间。相反，我更喜欢使用纯JavaScript来实现图片的预加载。
-
 ```js
 var images = new Array()
 function preload() {
@@ -198,7 +132,6 @@ preload(
 ```
 
 ###### 方法三：使用Ajax实现预加载
-
 ```js
 window.onload = function() {
 setTimeout(function() {
@@ -239,7 +172,6 @@ setTimeout(function() {
                 url: url
             };
             params.cache.push(data);
-
         });
         var callback = function(call) {
             if ($.isFunction(params.callback)) {
@@ -280,15 +212,11 @@ setTimeout(function() {
 })(jQuery);
 ```
 
-
-
 ## mouseover和mouseenter的区别
-
  - mouseover 事件具有冒泡特性，也就是说无论鼠标是从别的元素移动到element或者是从element的子元素移动到element都会触发mouseover事件。
  - mouseenter 事件，该事件没有冒泡特性，也就是说只有鼠标穿过该事件的时候才会触发mouseenter
 
 ###### mouseover 模拟 mouseenter
-
 ```js
 var selector = document.getElementById('test');
   selector.addEventListener("mouseover", function( event ) {
@@ -308,13 +236,13 @@ var selector = document.getElementById('test');
     }
     // 冒泡触发，也就是子节点触发
     if ( related == target ) { return; }
+
     //......mouseenter事件代码
   }, false);
+
 ```
 
-
 ## 闭包
-
 ```js
 function f1(){
     var n = [1,2];
@@ -328,7 +256,6 @@ function f1(){
     }
     return f2;
 }
-
 var result1 = f1();//拷贝一份
 var result2 = f1();//拷贝一份
 var result3 = f1();//拷贝一份
@@ -341,11 +268,9 @@ console.log(a2 === a3);//false
 console.log(a3 === a4);//true
 ```
 
-
 ## new 命令的原理
 
 ##### 原理
-
 使用new命令时，它后面的函数依次执行下面的步骤。
 
  - 创建一个空对象，作为将要返回的对象实例。
@@ -353,9 +278,7 @@ console.log(a3 === a4);//true
  - 将这个空对象赋值给函数内部的this关键字。
  - 开始执行构造函数内部的代码。
 
-
 实现代码：
-
 ```js
 function _new(/* 构造函数 */ constructor, /* 构造函数参数 */ params) {
   // 将 arguments 对象转为数组
@@ -369,17 +292,12 @@ function _new(/* 构造函数 */ constructor, /* 构造函数参数 */ params) {
   // 如果返回结果是对象，就直接返回，否则返回 context 对象
   return (typeof result === 'object' && result != null) ? result : context;
 }
-
 // 实例
 var actor = _new(Person, '张三', 28);
 ```
 
-
-
 ##### 保证构造函数使用new
-
 ###### 方法一，严格模式
-
 ```js
 function Fubar(foo, bar){
   'use strict';
@@ -391,7 +309,6 @@ Fubar()
 ```
 
 ###### 方法二，new.target
-
 ```js
 function f() {
   if (!new.target) {
@@ -403,13 +320,8 @@ f() // Uncaught Error: 请使用 new 命令调用！
 ```
 
 
-
-
-
 ## call 、 apply 、bind 的实现
-
 ##### call 的实现
-
 ```js
 if(!Function.prototype.call){
 	Function.prototype.call = function(args){
@@ -440,9 +352,7 @@ if(!Function.prototype.call){
 }
 ```
 
-
 ##### apply 的实现
-
 ```js
 if(!Function.prototype.apply){
 	Function.prototype.myapply = function(args){
@@ -475,7 +385,6 @@ if(!Function.prototype.apply){
 
 
 ##### bind 的实现
-
 ```js
 if (!Function.prototype.bind) {
 	Function.prototype.mybind = function(args){
@@ -506,19 +415,14 @@ if (!Function.prototype.bind) {
 }
 ```
 
-
-
 ## 异步加载js的方法
-
 defer属性和async属性到底应该使用哪一个？
 
 一般来说，如果脚本之间没有依赖关系，就使用async属性，如果脚本之间有依赖关系，就使用defer属性。
 
 如果同时使用async和defer属性，后者不起作用，浏览器行为由async属性决定。
 
-
 ##### defer：
-
 有了defer属性，浏览器下载脚本文件的时候，不会阻塞页面渲染。下载的脚本文件在DOMContentLoaded事件触发前执行（即刚刚读取完</html>标签），而且可以保证执行顺序就是它们在页面上出现的顺序。
 
 对于内置而不是加载外部脚本的script标签，以及动态生成的script标签，defer属性不起作用。
@@ -528,9 +432,7 @@ defer属性和async属性到底应该使用哪一个？
  - 浏览器继续往下解析 HTML 网页，同时并行下载script元素加载的外部脚本。
  - 浏览器完成解析 HTML 网页，此时再回过头执行已经下载完成的脚本。
 
-
 ##### async:
-
 async属性可以保证脚本下载的同时，浏览器继续渲染。需要注意的是，一旦采用这个属性，就无法保证脚本的执行顺序。哪个脚本先下载结束，就先执行那个脚本。
 
  - 浏览器开始解析 HTML 网页。
@@ -538,7 +440,6 @@ async属性可以保证脚本下载的同时，浏览器继续渲染。需要注
  - 浏览器继续往下解析 HTML 网页，同时并行下载script标签中的外部脚本。
  - 脚本下载完成，浏览器暂停解析 HTML 网页，开始执行下载的脚本。
  - 脚本执行完毕，浏览器恢复解析 HTML 网页。
-
 
 ##### ES6 模块(type="module")
 
@@ -550,11 +451,7 @@ async属性可以保证脚本下载的同时，浏览器继续渲染。需要注
 ##### 动态创建script标签
 
 
-
-
-
 ## Ajax解决浏览器的缓存问题
-
 Ajax能提高页面载入速度的主要原因是通过Ajax减少了重复数据的载入，也即在载入数据的同时将数据缓存到内存中，一旦数据被加载，只要没有刷新页面，这些数据就会一直被缓存在内存中，当提交的URL与历史的URL一致时，就不需要提交给服务器，也即不需要从服务器获取数据，虽然降低了服务器的负载，提高了用户体验，但不能获取最新的数据。为了保证读取的信息都是最新的，需要禁止其缓存功能。
 
  - 在ajax发送请求前加上 anyAjaxObj.setRequestHeader("If-Modified-Since","0")。
@@ -564,14 +461,9 @@ Ajax能提高页面载入速度的主要原因是通过Ajax减少了重复数据
  - 如果是使用jQuery，直接这样就可以了 $.ajaxSetup({cache:false})。这样页面的所有ajax都会执行这条语句就是不需要保存缓存记录。
 
 
-
-
 ## 防抖与节流
-
 ##### 防抖
-
 根据用户输入信息发请求的时候，为了防止频繁触发请求，需要等待用户最后输入的时候再发送请求，也就是防抖：
-
 ```js
 function debounce(fn,delay){
 	//利用闭包，保留定时器的指引
@@ -589,11 +481,8 @@ var scroll = debounce(function(){
 window.onscroll = scroll;
 ```
 
-
 ##### 节流
-
 当滚动鼠标时，因为滚动事件触发间隔极短，需要限制其在某个时间段内，只执行一次。
-
 ```js
 function throttle(fn,interval){
 	//设定初始时间
@@ -626,88 +515,8 @@ window.onscroll = scroll;
 ```
 
 
-
-## [浏览器缓存](http://www.cnblogs.com/lyzg/p/5125934.html)
-
-强缓存与协商缓存的共同点是：如果命中，都是从客户端缓存中加载资源，而不是从服务器加载资源数据；
-
-区别是：强缓存不发请求到服务器，协商缓存会发请求到服务器。
-
-##### 强缓存
-
-###### Expires
-Expires是较老的强缓存管理header，由于它是服务器返回的一个绝对时间，在服务器时间与客户端时间相差较大时，缓存管理容易出现问题，比如随意修改下客户端时间，就能影响缓存命中的结果。
-
- - 浏览器第一次跟服务器请求一个资源，服务器在返回这个资源的同时，在respone的header加上Expires的header；
- - 浏览器在接收到这个资源后，会把这个资源连同所有response header一起缓存下来（所以缓存命中的请求返回的header并不是来自服务器，而是来自之前缓存的header）；
- - 浏览器再请求这个资源时，先从缓存中寻找，找到这个资源后，拿出它的Expires跟当前的请求时间比较，如果请求时间在Expires指定的时间之前，就能命中缓存，否则就不行。
- - 如果缓存没有命中，浏览器直接从服务器加载资源时，Expires Header在重新加载的时候会被更新。
-
-
-###### Cache-Control
-
-在http1.1的时候，提出了一个新的header，就是Cache-Control，这是一个相对时间，在配置缓存的时候，以秒为单位，用数值表示，如：Cache-Control:max-age=315360000，它的缓存原理是：
-
- - 浏览器第一次跟服务器请求一个资源，服务器在返回这个资源的同时，在respone的header加上Cache-Control的header；
- - 浏览器在接收到这个资源后，会把这个资源连同所有response header一起缓存下来；
- - 浏览器再请求这个资源时，先从缓存中寻找，找到这个资源后，根据它第一次的请求时间和Cache-Control设定的有效期，计算出一个资源过期时间，再拿这个过期时间跟当前的请求时间比较，如果请求时间在过期时间之前，就能命中缓存，否则就不行。
- - 如果缓存没有命中，浏览器直接从服务器加载资源时，Cache-Control Header在重新加载的时候会被更新。
-
-Cache-Control描述的是一个相对时间，在进行缓存命中的时候，都是利用客户端时间进行判断，所以相比较Expires，Cache-Control的缓存管理更有效，安全一些。
-
-这两个header可以只启用一个，也可以同时启用，当response header中，Expires和Cache-Control同时存在时，Cache-Control优先级高于Expires。
-
-
-##### 强缓存的管理
-
-通常有2种方式来设置是否启用强缓存：
-
- - 通过代码的方式，在web服务器返回的响应中添加Expires和Cache-Control Header；
- - 通过配置web服务器的方式，让web服务器在响应资源的时候统一添加Expires和Cache-Control Header。
-
-
-##### 协商缓存
-
-Last-Modified，If-Modified-Since】都是根据服务器时间返回的header，一般来说，在没有调整服务器时间和篡改客户端缓存的情况下，这两个header配合起来管理协商缓存是非常可靠的，但是有时候也会服务器上资源其实有变化，但是最后修改时间却没有变化的情况，而这种问题又很不容易被定位出来，而当这种情况出现的时候，就会影响协商缓存的可靠性。所以就有了另外一对header来管理协商缓存，这对header就是【ETag、If-None-Match】。
-
-###### Last-Modified，If-Modified-Since
-
- - 浏览器第一次跟服务器请求一个资源，服务器在返回这个资源的同时，在respone的header加上Last-Modified的header，这个header表示这个资源在服务器上的最后修改时间；
- - 浏览器再次跟服务器请求这个资源时，在request的header上加上If-Modified-Since的header，这个header的值就是上一次请求时返回的Last-Modified的值；
- - 服务器再次收到资源请求时，根据浏览器传过来If-Modified-Since和资源在服务器上的最后修改时间判断资源是否有变化，如果没有变化则返回304 Not Modified，但是不会返回资源内容；如果有变化，就正常返回资源内容。
- - 浏览器收到304的响应后，就会从缓存中加载资源。
- - 如果协商缓存没有命中，浏览器直接从服务器加载资源时，Last-Modified Header在重新加载的时候会被更新，下次请求时，If-Modified-Since会启用上次返回的Last-Modified值。
-
-
-###### ETag、If-None-Match
-
- - 浏览器第一次跟服务器请求一个资源，服务器在返回这个资源的同时，在respone的header加上ETag的header，这个header是服务器根据当前请求的资源生成的一个唯一标识，这个唯一标识是一个字符串，只要资源有变化这个串就不同，跟最后修改时间没有关系；
- - 浏览器再次跟服务器请求这个资源时，在request的header上加上If-None-Match的header，这个header的值就是上一次请求时返回的ETag的值；
- - 服务器再次收到资源请求时，根据浏览器传过来If-None-Match和然后再根据资源生成一个新的ETag，如果这两个值相同就说明资源没有变化，否则就是有变化；如果没有变化则返回304 Not Modified，但是不会返回资源内容；如果有变化，就正常返回资源内容。与Last-Modified不一样的是，当服务器返回304 Not Modified的响应时，由于ETag重新生成过，response header中还会把这个ETag返回，即使这个ETag跟之前的没有变化；
- - 浏览器收到304的响应后，就会从缓存中加载资源。
-
-
-##### 协商缓存的管理
-
-【Last-Modified，If-Modified-Since】和【ETag、If-None-Match】一般都是同时启用，这是为了处理Last-Modified不可靠的情况。
-
-分布式系统里多台机器间文件的Last-Modified必须保持一致，以免负载均衡到不同机器导致比对失败；
-
-分布式系统尽量关闭掉ETag(每台机器生成的ETag都会不一样）；
-
-##### 浏览器行为对缓存的影响
-
- - 当ctrl+f5强制刷新网页时，直接从服务器加载，跳过强缓存和协商缓存；
- - 当f5刷新网页时，跳过强缓存，但是会检查协商缓存；
-
-
-
-
-
 ## js监听对象属性的改变
-
 ##### 在ES5中可以通过Object.defineProperty来实现已有属性的监听
-
 ```js
 Object.defineProperty(user,'name',{
     set：function(key,value){
@@ -716,27 +525,23 @@ Object.defineProperty(user,'name',{
 ```
 缺点：如果属性不在user对象中，则不能监听该属性的变化
 
-
 ##### 在ES6中可以通过Proxy来实现
-
 ```js
 var  user = new Proxy({}，{
  set：function(target,key,value,receiver){
   }
 })
 ```
-
 这样即使有属性在user中不存在，通过user.id来定义也同样可以这样监听这个属性的变化。
 
 
-
 ## Object.is
-
 ```js
 // 特例
 Object.is(0, -0);            // false
 Object.is(-0, -0);           // true
 Object.is(NaN, 0/0);         // true
+
 if (!Object.is) {
   Object.is = function(x, y) {
     if (x === y) {
@@ -750,10 +555,7 @@ if (!Object.is) {
 }
 ```
 
-
-
 ## requestAnimationFrame 与 cancelAnimationFrame
-
 大多数电脑显示器的刷新频率是60Hz，大概相当于每秒钟重绘60次。大多数浏览器都会对重绘操作加以限制，不超过显示器的重绘频率，因为即使超过那个频率用户体验也不会有提升。因此，最平滑动画的最佳循环间隔是1000ms/60，约等于16.6ms
 
 而setTimeout和setInterval的问题是，它们都不精确。它们的内在运行机制决定了时间间隔参数实际上只是指定了把动画代码添加到浏览器UI线程队列中以等待执行的时间。如果队列前面已经加入了其他任务，那动画代码就要等前面的任务完成后再执行。
@@ -780,9 +582,7 @@ var timer = requestAnimationFrame(cb);
 ```
 
 
-
 ## 用 setTimeout 模拟 setInterval
-
 ```js
 function interval(func, wait, times){
     var interv = function(w, t){
@@ -804,254 +604,11 @@ function interval(func, wait, times){
 ```
 
 
-
 ## 任务队列
 
  - 先主线程，后任务队列；
  - 先微任务（promise,nextTick），后宏任务(setTimeout)；
  - 先nextTick，后promise（then）
-
-
-
-
-## OPTIONS请求方法
-
-非简单请求是那种对服务器有特殊要求的请求，比如请求方法是PUT或DELETE，或者Content-Type字段的类型是application/json。
-
-非简单请求的CORS请求，会在正式通信之前，增加一次HTTP查询请求，称为"预检"请求（preflight）。
-
- - 获取服务器支持的HTTP请求方法；也是黑客经常使用的方法。
- - 用来检查服务器的性能。例如：AJAX进行跨域请求时的预检，需要向另外一个域名的资源发送一个HTTP OPTIONS请求头，用以判断实际发送的请求是否安全。
-
-
-
-## click在ios上有300ms延迟，原因及如何解决？
-
- - 粗暴型，禁用缩放
- ```css
- <meta name="viewport" content="wid-th=device-width, user-scalable=no">
- ```
-
- - 利用FastClick，其原理是检测到touchend事件后，立刻出发模拟click事件，并且把浏览器300毫秒之后真正出发的事件给阻断掉(preventDefault)
-
-
-
-
-## 响应式布局
-
-##### 媒體查詢
-略
-
-##### 百分比
-
-###### 子元素height和width的百分比
-子元素的height或width中使用百分比，是相对于子元素的直接父元素，width相对于父元素的width，height相对于父元素的height。
-
-###### top和bottom 、left和right
-子元素的top和bottom如果设置百分比，则相对于直接非static定位(默认定位)的父元素的高度;
-
-同样子元素的left和right如果设置百分比，则相对于直接非static定位(默认定位的)父元素的宽度。
-
-###### padding 与 margin
-子元素的padding与margin如果设置百分比，不论是垂直方向或者是水平方向，都相对于直接父亲元素的width，而与父元素的height无关。
-
-###### border-radius
-border-radius不一样，如果设置border-radius为百分比，则是相对于自身的宽度。
-
-##### rem
-
-```js
-(function () {
-    var html = document.documentElement;
-    function onWindowResize() {
-        html.style.fontSize = html.getBoundingClientRect().width / 10 + 'px';
-    }
-    window.addEventListener('resize', onWindowResize);
-    onWindowResize();
-})();
-```
-
-###### px2rem
- webpack loader的形式：
-
- ```js
- npm install px2rem-loader
- ```
-
- 在webpack的配置文件中：
-
- ```js
- module.exports = {
-  // ...
-  module: {
-    rules: [{
-      test: /\.css$/,
-      use: [{
-        loader: 'style-loader'
-      }, {
-        loader: 'css-loader'
-      }, {
-        loader: 'px2rem-loader',
-        // options here
-        options: {
-          remUni: 75,
-          remPrecision: 8
-        }
-      }]
-    }]
-  }
- ```
-
-###### rem 布局的缺点
-
-在响应式布局中，必须通过js来动态控制根元素font-size的大小。
-
-##### vw 与 vh
-
-css3中引入了一个新的单位vw/vh，与视图窗口有关，vw表示相对于视图窗口的宽度，vh表示相对于视图窗口高度，除了vw和vh外，还有vmin和vmax两个相关的单位。
-
-比如对于iphone6/7 375*667的分辨率，那么px可以通过如下方式换算成vw：
-
-```js
-1px = （1/375）*100 vw
-```
-
-
-
-## css盒模型
-
-CSS中的盒子模型包括IE盒子模型和标准的W3C盒子模型。
-
-##### 标准盒子模型
-在标准的盒子模型中，width指content部分的宽度。（box-sizing：content-box）
-
-##### IE盒子模型
-在IE盒子模型中，width表示content+padding+border这三个部分的宽度。（box-sizing：border-box）
-
-
-
-## 画0.5px宽的线
-
-##### 使用SVG
-
-```css
-.hr.svg {
-  background: none;
-  height: 1px;
-  background: url("data:image/svg+xml;utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='1px'><line x1='0' y1='0' x2='100%' y2='0' stroke='#000'></line></svg>");
-}
-```
-
-##### meta viewport
-
-```html
-<meta name="viewport" content="width=device-width,initial-sacle=1">
-```
-
-scale改成0.5：
-
-```html
-<meta name="viewport" content="width=device-width,initial-sacle=0.5">
-```
-
-##### transform: scale
-
-```css
-.hr.scale-half {
-  height: 1px;
-  transform: scaleY(0.5);
-}
-```
-
-
-
-## link标签和import标签的区别
-
- - link属于html标签，而@import是css提供的
- - 页面被加载时，link会同时被加载，而@import引用的css会等到页面加载结束后加载。
- - link是html标签，因此没有兼容性，而@import只有IE5以上才能识别。
- - link方式样式的权重高于@import的。
-
-
-
-
-## transition和animation的区别
-
-##### transition + Transform
-
-强调过渡，两个关键帧
-
- - transition需要事件触发，所以没法在网页加载时自动发生。
- - transition是一次性的，不能重复发生，除非一再触发。
- - transition只能定义开始状态和结束状态，不能定义中间状态，也就是说只有两个状态。
- - 一条transition规则，只能定义一个属性的变化，不能涉及多个属性。
-
-
-##### animation + @keyframes
-
-强调流程与控制，多个关键帧
-
- - 不需要触发，页面一加载就可以开始
- - 通过keyframes控制动画的多种状态
-
-
-
-
-## BFC(块级格式化上下文)
-
-块级格式化上下文，是一个独立的渲染区域，并且有一定的布局规则。
-
- - BFC区域不会与float box重叠
- - BFC是页面上的一个独立容器，子元素不会影响到外面
- - 计算BFC的高度时，浮动元素也会参与计算
-
-那些元素会生成BFC：
-
- - 根元素
- - float不为none的元素
- - position为fixed和absolute的元素
- - display为inline-block、table-cell、table-caption，flex，inline-flex的元素
- - overflow不为hidden|auto|scroll的元素
-
-
-BFC
-
- - 不和浮动元素重叠
- - 清除元素内部浮动
- - 防止垂直 margin 重叠（父子或者兄弟元素）
-
-
-
-
-
-## 单行与多行省略
-
-```css
-p{
-	overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
-}
-
-div{
-	display: -webkit-box;
-    -webkit-box-orient:vertical;
-    -webkit-line-clamp:3;
-    overflow:hidden;
-}
-```
-
-
-
-
-## 双边距重叠
-
-多个相邻（兄弟或者父子关系）普通流的块元素垂直方向marigin会重叠。
-
- - 两个相邻的外边距都是正数时，折叠结果是它们两者之间较大的值。
- - 两个相邻的外边距都是负数时，折叠结果是两者绝对值的较大值。
- - 两个外边距一正一负时，折叠结果是两者的相加的和。
-
 
 
 
@@ -1356,30 +913,6 @@ function partition(arr,startIndex,endIndex){
 ```
 
 
-
-
-## link和@import的区别
-
-两者都是外部引用 CSS 的方式，但是存在一定的区别：
-
- - link是XHTML标签，除了能够加载CSS，还可以定义RSS等其他事务；而@import属于CSS范畴，只可以加载CSS。
- - link引用CSS时，在页面载入时同时加载；@import需要页面完全载入以后再加载。
- - link是XHTML标签，无兼容问题；@import则是在CSS2.1提出的，低版本的浏览器不支持
- - link支持使用Javascript控制DOM改变样式；而@import不支持。
-
-
-
-
-## css 动画和 js 动画的差异
-
- - 代码复杂度，js 动画代码相对复杂一些
- - 动画运行时，对动画的控制程度上，js 能够让动画，暂停，取消，终止，css动画不能添加事件
- - 动画性能看，js 动画多了一个js 解析的过程，性能不如 css 动画好
-
-
-
-
-
 ## [javascript 中常见的内存泄露陷阱](http://web.jobbole.com/88463/)
 
  - 意外的全局变量
@@ -1472,113 +1005,6 @@ const es_namespace = await import('./es');
  - 深拷贝，JSON.parse()和JSON.stringify()给了我们一个基本的解决办法。但是函数不能被正确处理
 
 
-
-
-## http 与 https
-
-##### http的不足：
-
- - 通信使用明文，可能会被窃听
- - 不验证通信方的身份，可能遭遇伪装
- - 无法证明报文的完整性，可能遭遇篡改
-
-##### 何为https?
-
-**http + 加密 + 验证 + 完整性保护 = https**
-
-
-##### https的原理
-
-https并非应用层上一种新的协议，而是http通信接口部分用SSL（Secure Socket Layer，安全套接层）和TLS（Transport Layer Security，传输安全协议）协议代替。
-
-通常情况下，http与TCP直接通信，当使用SSL时，就演变层先跟SSL通信，再由SSL与TCP通信。
-
-所谓的https，也就是身披SSL协议外壳的http。
-
-
-##### SSL如何加密？
-
-SSL使用的是一种公开密钥加密（Public-key cryptography）的加密方式。
-
-加密方法中，加密算法是公开的，密钥是保密的，加密跟解密都需要用到密钥。
-
-###### 共享密钥加密（Common key cryto system）
-
-加密与解密使用同一个密钥，也被称为对称密钥加密。
-
-不足：密钥能够安全发送，信息也能安全发送。
-
-###### 公开密钥加密
-
-公开密钥加密使用一对非对称的密钥，一把叫做私有密钥（private key），另一把叫做公开密钥（public key）。
-
-发送密文的一方使用公开密钥加密，对方收到信息之后，再使用私有密钥解密。
-
-##### https使用混合加密机制
-
-公开密钥加密与共享密钥加密相比，其处理速度要慢，所以需要利用其各自的优势。
-
-在交换密钥阶段使用公开密钥加密的方式，之后建立通信交换报文阶段则使用共享密钥加密的方式。
-
-##### 公开密钥的可靠性证明
-
-解决方法是，使用数据证书认证机构（CA,Certificate Authority）和其相关机构颁布的公开密钥证书。
-
- - 提出公开密钥申请
- - 数字证书认证机构对公开密钥做数字签名，颁发公钥证书
- - 服务器发送公钥证书给客户端，进行公开密钥加密通信
- - 客户端使用内置的数据证书认证机构的公开密钥，对公钥证书的数字签名进行认证。
-
-
-数据证书认证机构的公开密钥必须安全的转交给客户端，使用通信方式进行安全转交是一件非常困难的事情，所以，浏览器发布时，一般会事先植入认证机构的公开密钥。
-
-
-
-
-## TCP三次握手
-
-TCP/IP协议中，TCP协议提供可靠的连接服务，采用三次握手建立一个连接。
-
- - 第一次握手：建立连接时，客户端A发送SYN包（SYN=j）到服务器B，并进入SYN-SEND状态，等待服务器B确认。
- - 第二次握手：服务器B收到SYN包，必须确认客户A的SYN（ACK=j+1），同时自己也发送一个SYN包（SYN=k），即SYN+ACK包，此时服务器B进入SYN-RECV状态。
- - 第三次握手：客户端A收到服务器B的SYN＋ACK包，向服务器B发送确认包ACK（ACK=k+1），此包发送完毕，客户端A和服务器B进入ESTABLISHED状态，完成三次握手。
-
-完成三次握手，客户端与服务器开始传送数据。
-
-LISTEN - 侦听来自远方TCP端口的连接请求；
-SYN-SENT -在发送连接请求后等待匹配的连接请求；
-SYN-RECEIVED - 在收到和发送一个连接请求后等待对连接请求的确认；
-ESTABLISHED- 代表一个打开的连接，数据可以传送给用户；
-
-
-
-
-## TCP四次挥手
-
-TCP的连接的拆除需要发送四个包，因此称为四次挥手(four-way handshake)。客户端或服务器均可主动发起挥手动作，在socket编程中，任何一方执行close()操作即可产生挥手操作。
-
- - 客户端A发送一个FIN，用来关闭客户A到服务器B的数据传送。
- - 服务器B收到这个FIN，它发回一个ACK，确认序号为收到的序号加1。和SYN一样，一个FIN将占用一个序号。
- - 服务器B关闭与客户端A的连接，发送一个FIN给客户端A。
- - 客户端A发回ACK报文确认，并将确认序号设置为收到序号加1。
-
-
-
-
-## TCP和UDP的区别
-
-“信道复用技术”实现了，在同一条线路上，单位时间内可供X台计算机同时通信。
-
-一个TCP协议连接其实就是在物理线路上创建的一条“虚拟信道”。这条“虚拟信道”建立后，在TCP协议发出FIN包之前（两个终端都会向对方发送一个FIN包），是不会释放的。正因为这一点，TCP协议被称为面向连接的协议！
-
-UDP协议，一样会在物理线路上创建一条“虚拟信道”，否则UDP协议无法传输数据！但是，当UDP协议传完数据后，这条“虚拟信道”就被立即注销了！因此，称UDP是不面向连接的协议！
-
- - TCP协议提供了可靠的数据传输,但是其拥塞控制、数据校验、重传机制的网络开销很大,不适合实时通信。
- - UDP 协议是无连接的数据传输协议并且无重传机制,会发生丢包、收到重复包、乱序等情况。而对于数据精确性要求不高的状态数据以及视频数据,丢包的影响不大。
-
-
-
-
 ## 函数柯里化
 
 ```js
@@ -1635,222 +1061,11 @@ xhr.send(null);
 
 
 
-
-## webSocket
-
-WebSocket protocol 是HTML5一种新的协议。它是实现了浏览器与服务器全双工通信(full-duplex)。HTML5定义了WebSocket协议，能更好的节省服务器资源和带宽并达到实时通讯。
-
-在WebSocket出现之前，一般通过两种方式来实现Web实时用：轮询机制和流技术；其中轮询有不同的轮询，还有一种叫Comet的长轮询。
-
- - 轮询：这是最早的一种实现实时 Web 应用的方案。客户端以一定的时间间隔向服务端发出请求，以频繁请求的方式来保持客户端和服务器端的同步。这种同步方案的缺点是，当客户端以固定频率向服务器发起请求的时候，服务器端的数据可能并没有更新，这样会带来很多**无谓的网络传输**，所以这是一种非常低效的实时方案。
- - 长轮询：是对定时轮询的改进和提高，目地是为了降低无效的网络传输。当服务器端没有数据更新的时候，连接会保持一段时间周期直到数据或状态改变或者时间过期，通过这种机制来减少无效的客户端和服务器间的交互。当然，如果服务端的数据变更非常频繁的话，这种机制和定时轮询比较起来没有本质上的性能的提高。
- - 流：常就是在客户端的页面使用一个隐藏的窗口向服务端发出一个**长连接的请求**。服务器端接到这个请求后作出回应并不断更新连接状态以保证客户端和服务 器端的连接不过期。通过这种机制可以将服务器端的信息源源不断地推向客户端。这种机制在用户体验上有一点问题，需要针对不同的浏览器设计不同的方案来改进 用户体验，同时这种机制在并发比较大的情况下，对服务器端的资源是一个极大的考验。
-
-WebSocket 协议本质上是一个基于 TCP 的协议。为了建立一个 WebSocket 连接，客户端浏览器首先要向服务器发起一个 HTTP 请求，这个请求和通常的 HTTP 请求不同，包含了一些附加头信息，其中附加头信息”Upgrade: WebSocket”表明这是一个申请协议升级的 HTTP 请求，服务器端解析这些附加的头信息然后产生应答信息返回给客户端，客户端和服务器端的 WebSocket 连接就建立起来了，双方就可以通过这个连接通道自由的传递信息，并且这个连接会持续存在直到客户端或者服务器端的某一方主动的关闭连接。
-
-
-
-
-## 浏览器兼容性问题
-
-##### CSS常见兼容性问题
-
-```js
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-//如果当前IE浏览器安装了Google Chrome Frame(GCF)插件，则以chrome内核渲染页面，否则就以当前IE浏览器支持的最高版本模式来渲染
-```
-
-```js
-//rgba不支持IE8及以下 解决：用opacity或者filter
-background: rgba(255,255,255,0.1);
-filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#19ffffff,endColorstr=#19ffffff);
-```
-
-```js
-//transition不支持IE10及以下 解决：用js实现过渡动画
-```
-
-```js
-//background-size不支持IE8，可以用img
-background: url(img/aaa.jpg) no-repeat center center;
-background-size: 100% 100%;
-/*针对IE8的hack，目的是除掉之前background*/
-background: none\9;
-/*下一行为关键设置*/
-filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='img/aaa.jpg', sizingMethod='scale');
-/*
-原理：
-filter : progid:DXImageTransform.Microsoft.AlphaImageLoader ( enabled=bEnabled , sizingMethod=sSize , src=sURL )
-enabled：可选项。布尔值(Boolean)。设置或检索滤镜是否激活。 true：默认值。滤镜激活。 false：滤镜被禁止。
-sizingMethod：可选项。字符串(String)。设置或检索滤镜作用的对象的图片在对象容器边界内的显示方式。 crop：剪切图片以适应对象尺寸。 image：默认值。增大或减小对象的尺寸边界以适应图片的尺寸。 scale：缩放图片以适应对象的尺寸边界。
-src：必选项。字符串(String)。使用绝对或相对 url 地址指定背景图像。假如忽略此参数，滤镜将不会作用。
-*/
-```
-
-```js
-//使用PIE.htc让IE6/7/8支持CSS3部分属性，像CSS3的border-radius，box-shadow，css backgrounds(-pie-background),Gradients,RGBA属性
-div{
-    border-radius: 10px;
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-    background: #abcdef;
-    behavior: url(css/PIE.htc);
-}
-```
-
-```js
-//用css hack
-IE6: _
-IE7/7: *
-IE7/Firefox: !important
-IE7: *+
-IE6/7/8: 9
-IE8:
-```
-
-```js
-//按钮button添加type属性，IE下的默认类型是button，其他浏览器下的默认类型是submit
-```
-
-```js
-//识别HTML5元素，IE9以下可能无法识别nav/footer，使用html5shiv
-//有一点需要注意，在页面中调用html5shiv.js文件必须添加在页面的head元素内，因为IE浏览器必须在元素解析前知道这个元素
-<!--[if lt IE 9]>
-<script type="text/javascript" src="js/html5shiv.js"></script>
-<![endif]-->
-```
-
-
-
-##### JS常见兼容性问题
-
-```js
-//解决 IE8 不支持console
-window.console = window.console || (function () {
-    var c = {}; c.log = c.warn = c.debug = c.info = c.error = c.time = c.dir = c.profile
-    = c.clear = c.exception = c.trace = c.assert = function () { };
-    return c;
-})();
-```
-
-```js
-//W3C标准规定，事件对象是作为函数的参数传入的，唯独在IE下是行不通的，IE采用了一种非标准的方式，将事件对象作为window对象的event属性。
-document.onclick = function(ev){
-	ev = ev || window.event;
-}
-```
-
-```js
-/*
-IE6/7/8：
-对于没有doctype声明的页面里可以使用  document.body.scrollTop 来获取 scrollTop高度;
-对于有doctype声明的页面则可以使用 document.documentElement.scrollTop；
-
-Safari:
-safari 比较特别，有自己获取scrollTop的函数 ： window.pageYOffset ；
-*/
-var scrollTop = document.documentElement.scrollTop || window.pageYOffset || document.body.scrollTop;
-```
-
-```js
-//new date() 注意兼容性问题
-//对默认的日期格式进行转换， 基于'/'格式的日期字符串，才是被各个浏览器所广泛支持的，‘-’连接的日期字符串，则是只在chrome下可以正常工作。
-var time= new Date(Date.parse(timeStr.replace(/-/g,"/"))).getTime();
-```
-
-```js
-//attachEvent与addEventlistener兼容性
-var EventUtil = {
-    addHandler : function(element,type,handler){
-        if(element.addEventListener){
-            element.addEventListener(type,handler,false);
-        }else if(element.attachEvent){
-            element.attachEvent('on' + type,handler);
-        }else{
-            element['on' + type] = handler;
-        }
-    },
-    removeHandler : function(element,type,handler){
-        if(element.removeEventListener){
-            element.removeEventListener(type,handler,false);
-        }else if(element.detachEvent){
-            element.detachEvent('on' + type,handler);
-        }else{
-            element['on' + type] = null;
-        }
-    }
-}
-```
-
-```js
-//window.getComputedStyle能够获取元素的实际样式，但是低版本的ie8及以下不支持
-//获取当前样式
-function getStyle(element, attr){
-    if(window.getComputedStyle){
-        //优先使用W3C规范
-        return window.getComputedStyle(element)[attr];
-    }else{
-        //针对IE9以下兼容
-        return element.currentStyle[attr];
-    }
-}
-```
-
-
-
-## 水平垂直居中
-
-方法一：
-
-```css
-#container{
-    position:relative;
-}
-#center{
-    width:100px;
-    height:100px;
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform: translate(-50%,-50%);
-}
-```
-
-方法二：
-
-```css
-#container{
-    position:relative;
-}
-#center{
-    position:absolute;
-    margin:auto;
-    top:0;
-    bottom:0;
-    left:0;
-    right:0;
-}
-```
-
-方法三：
-
-```css
-#container{
-    display:flex;
-    justify-content:center;
-    align-items: center;
-}
-```
-
-
 ## ES5继承与Class继承的区别
 ES5 的继承，实质是先创造子类的实例对象this，然后再将父类的方法添加到this上面（Parent.apply(this)）。
 
 ES6 的继承机制完全不同，实质是先将父类实例对象的属性和方法，加到this上面（所以必须先调用super方法），然后再用子类的构造函数修改this。
 
 如果子类没有定义constructor方法，这个方法会被默认添加。也就是说，不管有没有显式定义，任何一个子类都有constructor方法。
-
-
-
 
 
