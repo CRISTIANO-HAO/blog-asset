@@ -1,33 +1,28 @@
-#### umi源码解析
+# umi源码解析
 
 本文阅读的版本是`"version": "3.2.22"`。umi项目是采用lerna管理的多模块架构，所有包都在packages目录下。
 
 ## 入口
 
-显而易见，umi包是整个项目的入口，提供了umi相关核心功能。
-
-```javascript
-let ex = require('./lib/cjs');
-try {
-  const umiExports = require('@@/core/umiExports');
-  ex = Object.assign(ex, umiExports);
-} catch (e) {}
-module.exports = ex;
-```
-
-值得注意的是`@@` 是umi默认内置的alias，在`packages/preset-built-in/src/plugins/features/alias.ts`文件里设置：
+umi提供了`umi`命令，入口是`packages/umi/bin/umi.js`：
 
 ```typescript
-// 选择在 chainWebpack 中进行以上 alias 的初始化，是为了支持用户使用 modifyPaths API 对 paths 进行改写
-memo.resolve.alias.set('@', paths.absSrcPath as string);
-memo.resolve.alias.set('@@', paths.absTmpPath as string);
+#!/usr/bin/env node
+
+const resolveCwd = require('resolve-cwd');
+
+const { name, bin } = require('../package.json');
+const localCLI = resolveCwd.silent(`${name}/${bin['umi']}`);
+if (!process.env.USE_GLOBAL_UMI && localCLI && localCLI !== __filename) {
+  const debug = require('@umijs/utils').createDebug('umi:cli');
+  debug('Using local install of umi');
+  require(localCLI);
+} else {
+  require('../lib/cli');
+}
 ```
 
-
-
-## umi命令
-
-umi提供了`umi`命令，入口是`packages/umi/bin/umi.js`，该文件又加载了`packages/umi/src/cli.ts`文件：
+该文件又加载了`packages/umi/src/cli.ts`文件：
 
 ```javascript
 try {
@@ -58,13 +53,13 @@ try {
   }
 ```
 
-跳到`forkedDev`去看，发现所有命令实质上都是要`new Service().run()`，由此可知Service是核心类。
+跳到`forkedDev`去看，发现所有命令实质上都是要执行 `new Service().run()`，由此可知Service是核心类。
 
 
 
 ## service核心类
 
-`packages/umi/src/ServiceWithBuiltIn.ts`继承了service类，用于实例化时添加内置presets跟plugins：
+`packages/umi/src/ServiceWithBuiltIn.ts` 继承了service类，用于实例化时添加内置presets跟plugins：
 
 ```javascript
 class Service extends CoreService {
@@ -217,7 +212,7 @@ export function pathToObj({
     key,
     path: winPath(path),
     apply() {
-      // 到时候就是调用apply方法加载注册plugin跟preset
+      // 到时候就是调用apply方法加载执行plugin跟preset
       try {
         const ret = require(path);
         // 导出es模块
@@ -231,11 +226,11 @@ export function pathToObj({
 }
 ```
 
-`apply` 方法返回的是`require(path)` 模块对象，并且做了es跟cjs模块兼容处理。
+`apply` 方法返回的是 `require(path)` 模块对象，并且做了es跟cjs模块兼容处理。
 
 ### run方法
 
-实例化之后紧接着就是调用`run`执行完整程序：
+Service实例化之后紧接着就是调用`run`执行完整程序：
 
 ```typescript
 async run({ name, args = {} }: { name: string; args?: any }) {
@@ -291,13 +286,13 @@ async initPresetsAndPlugins() {
 async initPreset(preset: IPreset) {
     const { id, key, apply } = preset;
     preset.isPreset = true;
-    // 封装一个统一的PluginAPI接口，后面细看；需要注意的是公用一个service；
+    // 封装一个统一的PluginAPI接口，后面细看；需要注意的是公用一个service实例；
     const api = this.getPluginAPI({ id, key, service: this });
 
     // 注册插件
     this.registerPlugin(preset);
-    // 调用前面说的apply方法进行初始化，在这里进行；
-    // 可以返回preset跟plugin，用递归注册；初始化@umijs/preset-built-in的时候用到plugins的实现处理；
+    // 调用前面说的apply方法，执行plugin的功能逻辑；
+    // preset可以返回presets跟plugins，用递归注册；初始化@umijs/preset-built-in的时候用到plugins的实现处理；
     const { presets, plugins, ...defaultConfigs } = await this.applyAPI({
       api,
       apply,
@@ -373,7 +368,7 @@ async initPlugin(plugin: IPlugin) {
 
 #### getPluginAPI
 
-每个preset跟plugin都注入到一个独立的PluginAPI对象中，并且通过Proxy共享注册在service实例上的`pluginMethods`对象上面的方法。
+每个preset跟plugin注入时创建一个独立的PluginAPI对象中，并且通过Proxy共享注册在service实例上的`pluginMethods`对象上面的方法。
 
 当preset或者plugin中调用 `api.props()` 时，实际上调用的是service实例上`pluginMethods`对象上的方法`this.pluginMethods[prop]`
 
@@ -447,7 +442,7 @@ async applyAPI(opts: { apply: Function; api: PluginAPI }) {
 
 
 
-### pluginMethods
+### PluginAPI
 
 #### 钩子函数机制
 
@@ -492,7 +487,7 @@ this.applyPlugins({key, type, initialValue}) {
 
 #### registerMethod
 
-这一段是umi整个源码的精华所在，所谓的preset跟plugin都是通过在pluginMethods对象上面注册各种各样类型的钩子函数，然后通过钩子函数掌控整个umi的功能流程实现。
+这一段是umi整个源码的精华所在，所谓的preset跟plugin都是通过在 `pluginMethods` 对象上面注册各种各样类型的钩子函数，然后通过钩子函数掌控整个umi的功能流程实现。
 
 下面看钩子函数的注册过程，方法来自`packages/core/src/Service/PluginAPI.ts`：
 
@@ -1186,7 +1181,7 @@ export default async function getConfig(
 
 umi的插件机制是建立在前面所提到的钩子函数机制基础上。通过各种钩子，提供注册各种插件的入口。
 
-### 入口
+### 插件收集
 
 在umi项目src目录下，我们可以看到 `.umi` 文件夹，里面有umi生成的临时文件。这些文件是由内置的plugin生成的。功能入口文件： `packages/preset-built-in/src/index.ts`：
 
@@ -1247,7 +1242,7 @@ export default function (api: IApi) {
         })?.path,
       ].filter(Boolean),
     });
-    // 生成plugin.ts临时文件
+    // 生成plugin.ts临时文件，validKeys注入其中用于校验
     api.writeTmpFile({
       path: 'core/plugin.ts',
       content: Mustache.render(
@@ -1284,7 +1279,7 @@ export default function (api: IApi) {
 }
 ```
 
-此plugin用于生成`pluginRegister.ts`  跟`plugin.ts`文件。前者搜集所有注册的插件的入口文件路径并注册，后者则是注册运行时插件的功能函数名称。
+此plugin用于生成`pluginRegister.ts`  跟 `plugin.ts` 文件。前者搜集所有注册的插件的入口文件路径并注册，后者则是注册运行时插件的功能函数名称。
 
 `src/.umi/core/pluginRegister.ts` :
 
@@ -1326,9 +1321,9 @@ export { plugin };
 
 ### Plugin
 
-此`Plugin`区别于前面提到的`PluginAPI`，前者是运行时使用，后者是编译时使用，前者在后者之后使用。
+此 `Plugin` 类区别于前面提到的 `PluginAPI` 类，前者是运行时(runtime)使用，后者是编译时使用。
 
-其中`register(plugin: IPlugin)`方法用于注册插件，apply指向plugin模块对象，模块对象暴露的方法需要在validKeys数组里提前声明。
+其中`register(plugin: IPlugin)`方法用于注册插件，apply指向plugin模块对象，模块对象导出的功能函数通过key分类存储在hooks对象上。需要注意的是，模块对象暴露的方法需要在validKeys数组里提前声明。
 
 `applyPlugins` 方法根据key与type执行相应的钩子函数数组。
 
@@ -1523,7 +1518,7 @@ export default (api: IApi) => {
 
 
 
-### 校验
+### 配置校验
 
 有的插件是可以跟umi配置文件配合使用的，在校验配置文件时候，会校验对应的插件配置项。
 
@@ -1621,7 +1616,60 @@ getConfig({ defaultConfig }: { defaultConfig: object }) {
 }
 ```
 
-### 使用
+
+
+### 接口导出
+
+umi 生成一个 `src/.umi/core/umiExports.ts` 临时文件，用于导出各种方法与接口。`packages/preset-built-in/src/plugins/generateFiles/core/umiExports.ts` :
+
+```javascript
+export default function (api: IApi) {
+  api.onGenerateFiles(async () => {
+    const umiExports = await api.applyPlugins({
+      key: 'addUmiExports',
+      type: api.ApplyPluginsType.add,
+      initialValue: [],
+    });
+
+    let umiExportsHook = {}; // repeated definition
+    api.writeTmpFile({
+      path: 'core/umiExports.ts',
+      content:
+        umiExports
+          .map((item: IUmiExport) => {
+            return generateExports({
+              item,
+              umiExportsHook,
+            });
+          })
+          .join('\n') + `\n`,
+    });
+  });
+}
+```
+
+提供了 `addUmiExports` 钩子，用于收集导出信息，下面以plugin-dva插件为例看其实现：
+
+```javascript
+ api.addUmiExports(() =>
+    hasModels
+      ? [
+          {
+            exportAll: true,
+            source: '../plugin-dva/exports',
+          },
+          {
+            exportAll: true,
+            source: '../plugin-dva/connect',
+          },
+        ]
+      : [],
+  );
+```
+
+
+
+### 使用案例
 
 现在通过梳理各种临时文件的生成来了解umi是如何通过插件的形式嵌入各种功能的。
 
@@ -1746,60 +1794,261 @@ function _compose({ fns, args }: { fns: (Function | any)[]; args?: object }) {
 
 
 
-### 接口导出
+#### 路由生成流程
 
-umi 生成一个 `src/.umi/core/umiExports.ts` 临时文件，用于导出各种方法与接口。`packages/preset-built-in/src/plugins/generateFiles/core/umiExports.ts` :
+在umi的路由配置中，我们可以使用layout component，wrappers等配置，这又是如何实现的呢，下面就通过看源码走一遍全流程。
 
-```javascript
-export default function (api: IApi) {
-  api.onGenerateFiles(async () => {
-    const umiExports = await api.applyPlugins({
-      key: 'addUmiExports',
-      type: api.ApplyPluginsType.add,
-      initialValue: [],
-    });
+##### getRoutes
 
-    let umiExportsHook = {}; // repeated definition
+不难猜出 `packages/preset-built-in/src/plugins/generateFiles/core/routes.ts` 文件是入口文件：
+
+```typescript
+api.onGenerateFiles(async (args) => {
+    const routesTpl = readFileSync(join(__dirname, 'routes.tpl'), 'utf-8');
+    const routes = await api.getRoutes();
     api.writeTmpFile({
-      path: 'core/umiExports.ts',
-      content:
-        umiExports
-          .map((item: IUmiExport) => {
-            return generateExports({
-              item,
-              umiExportsHook,
-            });
-          })
-          .join('\n') + `\n`,
+      path: 'core/routes.ts',
+      content: Mustache.render(routesTpl, {
+        routes: new Route().getJSON({ routes, config: api.config, cwd }),
+        runtimePath,
+        config: api.config,
+        loadingComponent: api.config.dynamicImport?.loading,
+      }),
     });
   });
+```
+
+既然调用了 `api.getRoutes();` ，通过前面 `registerMethod` 的原理自然知道肯定有地方在service实例上注册了 `getRoutes` 方法，不出所料，在 `packages/preset-built-in/src/plugins/routes.ts` 找到：
+
+```typescript
+api.registerMethod({
+    name: 'getRoutes',
+    async fn() {
+      const route = new Route({
+        async onPatchRoutesBefore(args: object) {
+          await api.applyPlugins({
+            key: 'onPatchRoutesBefore',
+            type: api.ApplyPluginsType.event,
+            args,
+          });
+        },
+        async onPatchRoutes(args: object) {
+          await api.applyPlugins({
+            key: 'onPatchRoutes',
+            type: api.ApplyPluginsType.event,
+            args,
+          });
+        },
+        async onPatchRouteBefore(args: object) {
+          await api.applyPlugins({
+            key: 'onPatchRouteBefore',
+            type: api.ApplyPluginsType.event,
+            args,
+          });
+        },
+        async onPatchRoute(args: object) {
+          await api.applyPlugins({
+            key: 'onPatchRoute',
+            type: api.ApplyPluginsType.event,
+            args,
+          });
+        },
+      });
+      return await api.applyPlugins({
+        key: 'modifyRoutes',
+        type: api.ApplyPluginsType.modify,
+        initialValue: await route.getRoutes({
+          config: api.config,
+          root: api.paths.absPagesPath!,
+        }),
+      });
+    },
+  });
+```
+
+从上可知，该方法提供了 `onPatchRoutesBefore`, `onPatchRoutes` 等等可以修改路由的钩子，也就是给其他插件提供了修改路由的接口。
+
+
+
+##### getJSON
+
+拿到 `routes` 数据后，umi 还给我们提供了按需加载的处理。下面看 `new Route().getJSON({ routes, config: api.config, cwd })` 实现，代码位置 `packages/core/src/Route/routesToJSON.ts` ：
+
+```typescript
+function patchRoute(route: IRoute) {
+  	// route.component是字符串时执行，
+    if (route.component && !isFunctionComponent(route.component)) {
+      // transform route component into webpack chunkName
+      const webpackChunkName = routeToChunkName({
+        route,
+        cwd,
+      });
+      // 解决 SSR 开启动态加载后，页面闪烁问题
+      if (config?.ssr && config?.dynamicImport) {
+        route._chunkName = webpackChunkName;
+      }
+      route.component = [
+        route.component,
+        webpackChunkName,
+        route.path || EMPTY_PATH,
+      ].join(SEPARATOR);
+    }
+    if (route.routes) {
+      patchRoutes(route.routes);
+    }
+  }
+```
+
+在前面规范名称的基础上，通过正则替换生成按需加载的代码：
+
+```typescript
+JSON.stringify(clonedRoutes, replacer, 2)
+    .replace(/\"component\": (\"(.+?)\")/g, (global, m1, m2) => {
+      return `"component": ${m2.replace(/\^/g, '"')}`;
+    })
+    .replace(/\"wrappers\": (\"(.+?)\")/g, (global, m1, m2) => {
+      return `"wrappers": ${m2.replace(/\^/g, '"')}`;
+    })
+    .replace(/\\r\\n/g, '\r\n')
+    .replace(/\\n/g, '\r\n');
+```
+
+replacer就是替换的实现细节：
+
+```typescript
+function replacer(key: string, value: any) {
+    switch (key) {
+      case 'component':
+        if (isFunctionComponent(value)) return value;
+        if (config.dynamicImport) {
+          const [component, webpackChunkName] = value.split(SEPARATOR);
+          let loading = '';
+          if (config.dynamicImport.loading) {
+            loading = `, loading: LoadingComponent`;
+          }
+          return `dynamic({ loader: () => import(/* webpackChunkName: '${webpackChunkName}' */'${component}')${loading}})`;
+        } else {
+          return `require('${value}').default`;
+        }
+      case 'wrappers':
+        // ...
+      default:
+        return value;
+    }
+  }
+```
+
+这里我们可以看到配置文件loading组件的身影 `config.dynamicImport.loading` 。到这里，我们看到的就是 `.umi/core/routes.ts` 文件中路由文件最终的样子。但是我们还是没看到 layout component 跟 wrapper组件的身影，这就到了runtime阶段了，下面继续看。
+
+
+
+##### renderRoutes
+
+从`.umi/umi.ts` 入口文件中我们看到了路由入口：
+
+```typescript
+const getClientRender = (args: { hot?: boolean; routes?: any[] } = {}) => plugin.applyPlugins({
+  key: 'render',
+  type: ApplyPluginsType.compose,
+  initialValue: () => {
+    const opts = plugin.applyPlugins({
+      key: 'modifyClientRenderOpts',
+      type: ApplyPluginsType.modify,
+      initialValue: {
+        routes: args.routes || getRoutes(),
+        plugin,
+        history: createHistory(args.hot),
+        isServer: process.env.__IS_SERVER,
+        dynamicImport: true,
+        rootElement: 'root',
+      },
+    });
+    return renderClient(opts);
+  },
+  args,
+});
+```
+
+不难猜出路由的实现在renderClient方法中：
+
+```tsx
+function RouterComponent(props: IRouterComponentProps) {
+  const { history, ...renderRoutesProps } = props;
+
+  useEffect(() => {
+    // ...
+    function routeChangeHandler(location: any, action?: string) {
+      // ...
+      props.plugin.applyPlugins({
+        key: 'onRouteChange',
+        type: ApplyPluginsType.event,
+        args: {
+          routes: props.routes,
+          matchedRoutes,
+          location,
+          action,
+        },
+      });
+    }
+    routeChangeHandler(history.location, 'POP');
+    return history.listen(routeChangeHandler);
+  }, [history]);
+
+  return <Router history={history}>{renderRoutes(renderRoutesProps)}</Router>;
 }
 ```
 
-提供了 `addUmiExports` 钩子，用于收集导出信息，下面以plugin-dva插件为例看其实现：
+在这里注册了路由变化事件，我们可以通过 `onRouteChange` 钩子监听。
 
-```javascript
- api.addUmiExports(() =>
-    hasModels
-      ? [
-          {
-            exportAll: true,
-            source: '../plugin-dva/exports',
-          },
-          {
-            exportAll: true,
-            source: '../plugin-dva/connect',
-          },
-        ]
-      : [],
-  );
+下面看`renderRoutes` 具体实现，`packages/renderer-react/src/renderRoutes/renderRoutes.tsx`
+
+```tsx
+function render({
+  route,
+  opts,
+  props,
+}: {
+  route: IRoute;
+  opts: IOpts;
+  props: object;
+}) {
+  // 递归渲染子路由
+  const routes = renderRoutes({
+    ...opts,
+    routes: route.routes || [],
+    rootRoutes: opts.rootRoutes,
+  });
+  let { component: Component, wrappers } = route;
+  if (Component) {
+    const defaultPageInitialProps = opts.isServer
+      ? {}
+      : (window as any).g_initialProps;
+    const newProps = {
+      ...props,
+      ...opts.extraProps,
+      ...(opts.pageInitialProps || defaultPageInitialProps),
+      route,
+      routes: opts.rootRoutes,
+    };
+    // @ts-ignore
+    let ret = <Component {...newProps}>{routes}</Component>;
+    // route.wrappers
+    if (wrappers) {
+      let len = wrappers.length - 1;
+      while (len >= 0) {
+        ret = React.createElement(wrappers[len], newProps, ret);
+        len -= 1;
+      }
+    }
+    return ret;
+  } else {
+    return routes;
+  }
+}
 ```
 
+通过renderRoutes递归渲染子路由；当 component （即layout component）有值，则包裹相应的子路由；当
 
+wrappers有值，则从右到左层层包裹component。
 
-
-
-
-
-
-
+到这里，整个路由的渲染流程就结束。
